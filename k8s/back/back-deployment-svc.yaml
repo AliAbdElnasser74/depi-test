@@ -46,7 +46,7 @@ spec:
     spec:
       containers:
       - name: back-ecommerce-container
-        image: aliabdelnasser/depi-test:v11
+        image: aliabdelnasser/depi-test:v12
         ports: 
         - containerPort: 8000
 
