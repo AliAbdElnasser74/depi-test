@@ -1,7 +1,7 @@
 podTemplate(
     containers: [
         containerTemplate(name: 'node', image: 'node:18-alpine', command: 'cat', ttyEnabled: true),
-        containerTemplate(name: 'docker', image: 'docker:20.10-cli', command: 'cat', ttyEnabled: true),
+        containerTemplate(name: 'docker', image: 'docker:20.10-cli', command: 'cat', ttyEnabled: true,privileged: true),
         containerTemplate(name: 'sonar-scanner', image: 'sonarsource/sonar-scanner-cli:latest', command: 'cat', ttyEnabled: true),
         containerTemplate(name: 'trivy', image: 'aquasec/trivy:latest', command: 'cat', ttyEnabled: true)
     ],
@@ -34,7 +34,7 @@ podTemplate(
                           -Dsonar.projectKey=${SONAR_KEY} \
                           -Dsonar.sources=./backend \
                           -Dsonar.host.url=${SONAR_HOST} \
-                          -Dsonar.login=\${SONAR_TOKEN}
+                          -Dsonar.token=${SONAR_TOKEN}
                         """
                     }
                 }
@@ -85,7 +85,7 @@ podTemplate(
 
         } finally {
             stage('Workspace Cleanup') { 
-                cleanWs() 
+                deleteDir() 
             }
         }
     }
