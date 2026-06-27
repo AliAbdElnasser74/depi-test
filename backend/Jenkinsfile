@@ -90,10 +90,9 @@ podTemplate(
                 }
             }
 
-        } finally {
-            stage('Workspace Cleanup') { 
-                deleteDir() 
-            }
+        }
+        finally{
+            cleanWs()
         }
     }
 }
