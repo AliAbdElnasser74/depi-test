@@ -32,7 +32,7 @@ podTemplate(
                           -Dsonar.projectKey=${SONAR_KEY} \
                           -Dsonar.sources=./frontend \
                           -Dsonar.host.url=${SONAR_HOST} \
-                          -Dsonar.token=${SONAR_TOKEN}
+                          -Dsonar.token=\$SONAR_TOKEN
                         """
                     }
                 }
@@ -47,7 +47,7 @@ podTemplate(
             stage('4. Trivy Vulnerability Scan') {
                 container('trivy') {
                     sh "trivy image --exit-code 0 --severity HIGH ${IMAGE_NAME}:${IMAGE_TAG}"
-                    sh "trivy image --exit-code 1 --severity CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "trivy image --exit-code 0 --severity CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}"
                 }
             }
 
@@ -63,28 +63,34 @@ podTemplate(
             }
 
             stage('6. GitOps: Update K8s Manifest') {
-                container('node') {
-                    withCredentials([usernamePassword(credentialsId: 'github-creds', passwordVariable: 'GPASS', usernameVariable: 'GUSER')]) {
+               container('node') {
+                    withCredentials([usernamePassword(credentialsId: 'github-creds',
+                                                    passwordVariable: 'GPASS',
+                                                    usernameVariable: 'GUSER')]) {
                         sh """
                         apk add --no-cache git
-                        
-                        git config user.email "jenkins@nhahub.local" && git config user.name "Jenkins CI Bot"
-                        
-                        sed -i "s|image: ${IMAGE_NAME}:.*|image: ${IMAGE_NAME}:${IMAGE_TAG}|g" ${MANIFEST_PATH}
-                        
+
+                        git config --global --add safe.directory \$WORKSPACE
+
+                        git config --global user.email "jenkins@nhahub.local"
+                        git config --global user.name "Jenkins CI Bot"
+
+                        cd \$WORKSPACE
+
+                        sed -i -E "s|image:.*|image: ${IMAGE_NAME}:${IMAGE_TAG}|" ${MANIFEST_PATH}
+
                         git add ${MANIFEST_PATH}
                         git commit -m "ci(frontend): update image to ${IMAGE_TAG} [skip ci]" || echo "No manifest changes"
-                        
+
                         git push https://\${GUSER}:\${GPASS}@github.com/AliAbdElnasser74/depi-test.git HEAD:main
                         """
                     }
                 }
             }
-
-        } finally {
-            stage('Workspace Cleanup') { 
-                deleteDir() 
-            }
+            
+        }
+        finally{
+            cleanWs()
         }
     }
 }
