@@ -79,7 +79,7 @@ podTemplate(
 
                         cd \$WORKSPACE
 
-                        sed -i "s|image: ${IMAGE_NAME}:.*|image: ${IMAGE_NAME}:${IMAGE_TAG}|g" ${MANIFEST_PATH}
+                        sed -i -E "s|image:.*|image: ${IMAGE_NAME}:${IMAGE_TAG}|" ${MANIFEST_PATH}
 
                         git add ${MANIFEST_PATH}
                         git commit -m "ci(backend): update image to ${IMAGE_TAG} [skip ci]" || echo "No manifest changes"
